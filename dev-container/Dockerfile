@@ -29,8 +29,8 @@ RUN LAZYGIT_VERSION=$(curl -s "https://api.github.com/repos/jesseduffield/lazygi
 RUN rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
 
 # Configure groups and user
-RUN if ! grep ":${GROUPID}:" /etc/group; then groupadd -g $GROUPID user; fi && \
-    useradd -l -m -u ${USERID} -g ${GROUPID} -s /usr/bin/zsh user && \
+RUN if ! grep "^user:" /etc/group; then groupadd -g $GROUPID user; fi && \
+   if ! grep "^user:" /etc/passwd; then useradd -l -m -u ${USERID} -g ${GROUPID} -s /usr/bin/zsh user; fi && \
     echo "user    ALL=(ALL)       NOPASSWD:ALL" > /etc/sudoers.d/user
 
 USER user
