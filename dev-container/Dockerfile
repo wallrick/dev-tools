@@ -49,15 +49,15 @@ RUN LV_BRANCH='release-1.3/neovim-0.9' && \
 
 # Aliases
 RUN zoxide init zsh >> ~/.zshrc && \
-cat >> ~/.zshrc <<'EOF'
+echo '\n \
 #plug romkatv/powerlevel10k
-export PATH=/home/user/.local/bin:$PATH
-alias grep=rg
-alias cat=bat
-alias vi=lvim
-alias vim=lvim
-alias ls=lsd
-alias cd=z
-EOF
+export PATH=/home/user/.local/bin:$PATH \n\
+alias grep=rg \n\ 
+alias cat=bat \n\
+alias vi=lvim \n\
+alias vim=lvim \n\
+alias ls=lsd \n\
+alias cd=z\n' \
+>> ~/.zshrc
 
 
