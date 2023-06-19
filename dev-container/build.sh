@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker build --tag dev-container:latest .
+docker build --tag localhost/lunarvim:latest .

@@ -1,3 +1,4 @@
 #!/bin/bash
 
-docker run --rm -it --name dev-container --hostname dev-container dev-container:latest zsh
+docker network create common > /dev/null 2>&1
+docker run --rm -it --network common --name lunarvim --hostname lunarvim localhost/lunarvim:latest zsh
