@@ -1,6 +1,6 @@
 # Neovim doesn't currently provide a aarch64 package for ubuntu 
 # so we build our own.
-FROM ubuntu:23.04 as NEOVIM
+FROM ubuntu:23.10 as NEOVIM
 USER root
 
 ARG NEOVIM_VERSION=0.9.1
@@ -10,14 +10,14 @@ RUN apt update && \
 
 WORKDIR /tmp
 
-RUN wget https://github.com/neovim/neovim/archive/refs/tags/v${NEOVIM_VERSION}.zip && \
+RUN wget --secure-protocol=TLSv1_2 https://github.com/neovim/neovim/archive/refs/tags/v${NEOVIM_VERSION}.zip && \
   unzip *.zip 
 
 RUN cd neovim* && \
   make CMAKE_BUILD_TYPE=RelWithDebInfo && \
   cd build && cpack -G DEB && dpkg -i nvim-linux64.deb
 
-FROM ubuntu:23.04
+FROM ubuntu:23.10
 
 ARG LVIM_BRANCH='release-1.3/neovim-0.9'
 
