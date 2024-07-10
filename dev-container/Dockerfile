@@ -3,14 +3,14 @@
 FROM ubuntu:23.10 as NEOVIM
 USER root
 
-ARG NEOVIM_VERSION=0.9.1
+ARG NEOVIM_VERSION=v0.10.0
 
 RUN apt update && \
   apt install -y ninja-build gettext cmake unzip curl wget git file
 
 WORKDIR /tmp
 
-RUN wget --secure-protocol=TLSv1_2 https://github.com/neovim/neovim/archive/refs/tags/v${NEOVIM_VERSION}.zip && \
+RUN wget --secure-protocol=TLSv1_2 https://github.com/neovim/neovim/archive/refs/tags/${NEOVIM_VERSION}.zip && \
   unzip *.zip 
 
 RUN cd neovim* && \
@@ -19,7 +19,7 @@ RUN cd neovim* && \
 
 FROM ubuntu:23.10
 
-ARG LVIM_BRANCH='release-1.3/neovim-0.9'
+ARG LVIM_BRANCH=1.4.0
 
 # Use a unique and high id for both group and user.
 ARG GROUPID=10000
@@ -33,7 +33,8 @@ RUN apt update && \
   apt update && \
   apt install -y git python3 pip python-is-python3 make npm nodejs cargo wget zsh \
   sudo lsd zoxide bat mosh glow fzf tree ripgrep tmux jq && \
-  apt-get autoremove && \
+  apt purge -y rustc && \
+  apt-get autoremove -y && \
   apt-get clean 
 
 COPY --from=NEOVIM /tmp/neovim*/build/nvim-linux64.deb /tmp
@@ -58,13 +59,18 @@ USER user
 
 WORKDIR /home/user
 
+RUN curl --proto '=https' --tlsv1.3 -o install.sh https://sh.rustup.rs -sSf && \
+  bash ./install.sh -q -y && \
+  rm -f ./install.sh
+
 # Going to get an error on zap install but it's ok
 RUN wget https://raw.githubusercontent.com/zap-zsh/zap/master/install.zsh && \
   zsh ./install.zsh --branch release-v1 || true && \
   rm -f ./install.zsh
 
-RUN wget https://raw.githubusercontent.com/LunarVim/LunarVim/${LVIM_BRANCH}/utils/installer/install.sh && \
-  bash ./install.sh --install-dependencies -y && \
+RUN . "$HOME/.cargo/env" && \
+  curl -so /tmp/install.sh https://raw.githubusercontent.com/LunarVim/LunarVim/${LVIM_BRANCH}/utils/installer/install.sh && \
+  bash /tmp/install.sh --install-dependencies -y && \
   rm -f install.sh
 
 # Aliases
