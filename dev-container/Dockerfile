@@ -1,12 +1,12 @@
 # Neovim doesn't currently provide a aarch64 package for ubuntu 
 # so we build our own.
-FROM ubuntu:23.10 as NEOVIM
+FROM ubuntu:24.04 as NEOVIM
 USER root
 
 ARG NEOVIM_VERSION=v0.10.0
 
 RUN apt update && \
-  apt install -y ninja-build gettext cmake unzip curl wget git file
+  apt install -y ninja-build gettext cmake unzip curl wget git file fontconfig ca-certificates
 
 WORKDIR /tmp
 
@@ -17,7 +17,7 @@ RUN cd neovim* && \
   make CMAKE_BUILD_TYPE=RelWithDebInfo && \
   cd build && cpack -G DEB && dpkg -i nvim-linux64.deb
 
-FROM ubuntu:23.10
+FROM ubuntu:24.04
 
 ARG LVIM_BRANCH=1.4.0
 
@@ -47,6 +47,9 @@ RUN if [ "$(uname -m)" = "aarch64" ]; then LAZYGIT_ARCH=arm64; else LAZYGIT_ARCH
   tar xf lazygit.tar.gz -C /usr/local/bin lazygit && \
   rm -f lazygit.tar.gz
 
+# Install getnf to manage fonts
+RUN curl -fsSL https://raw.githubusercontent.com/getnf/getnf/main/install.sh | bash
+
 # Allow Lunarvim to install dependencies
 RUN rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
 
@@ -55,9 +58,25 @@ RUN if ! grep ":user:" /etc/group; then groupadd -g $GROUPID user; fi && \
    if ! grep ":user:" /etc/passwd; then useradd -l -m -u ${USERID} -g ${GROUPID} -s /usr/bin/zsh user; fi && \
     echo "user    ALL=(ALL)       NOPASSWD:ALL" > /etc/sudoers.d/user
 
+# Add Docker's official GPG key:
+RUN install -m 0755 -d /etc/apt/keyrings && \ 
+  curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc && \
+  chmod a+r /etc/apt/keyrings/docker.asc && \
+  echo \
+  "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu \
+  $(. /etc/os-release && echo "$VERSION_CODENAME") stable" | \
+  tee /etc/apt/sources.list.d/docker.list > /dev/null && \
+  apt-get update -y && \
+  apt-get install -y docker-ce-cli
+
+
 USER user
 
 WORKDIR /home/user
+
+# Install nerd fonts
+RUN mkdir -p ~/.local/share/fonts && \
+cd ~/.local/share/fonts && curl -fLO https://github.com/ryanoasis/nerd-fonts/raw/HEAD/patched-fonts/DroidSansMono/DroidSansMNerdFont-Regular.otf
 
 RUN curl --proto '=https' --tlsv1.3 -o install.sh https://sh.rustup.rs -sSf && \
   bash ./install.sh -q -y && \
