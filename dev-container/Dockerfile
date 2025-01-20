@@ -1,6 +1,6 @@
 # Neovim doesn't currently provide a aarch64 package for ubuntu 
 # so we build our own.
-FROM ubuntu:24.04 as NEOVIM
+FROM ubuntu:24.04 AS neovim
 USER root
 
 ARG NEOVIM_VERSION=v0.10.0
@@ -37,7 +37,7 @@ RUN apt update && \
   apt-get autoremove -y && \
   apt-get clean 
 
-COPY --from=NEOVIM /tmp/neovim*/build/nvim-linux64.deb /tmp
+COPY --from=neovim /tmp/neovim*/build/nvim-linux64.deb /tmp
 
 RUN apt install -f /tmp/nvim-linux64.deb && rm -f /tmp/nvim-linux64.deb
 
@@ -54,8 +54,8 @@ RUN curl -fsSL https://raw.githubusercontent.com/getnf/getnf/main/install.sh | b
 RUN rm -f /usr/lib/python3.*/EXTERNALLY-MANAGED
 
 # Configure groups and user
-RUN if ! grep ":user:" /etc/group; then groupadd -g $GROUPID user; fi && \
-   if ! grep ":user:" /etc/passwd; then useradd -l -m -u ${USERID} -g ${GROUPID} -s /usr/bin/zsh user; fi && \
+RUN if ! grep "user:" /etc/group; then groupadd -g $GROUPID user; fi && \
+   if ! grep "user:" /etc/passwd; then useradd -l -m -u ${USERID} -g ${GROUPID} -s /usr/bin/zsh user; fi && \
     echo "user    ALL=(ALL)       NOPASSWD:ALL" > /etc/sudoers.d/user
 
 # Add Docker's official GPG key:
@@ -69,6 +69,8 @@ RUN install -m 0755 -d /etc/apt/keyrings && \
   apt-get update -y && \
   apt-get install -y docker-ce-cli
 
+RUN wget https://github.com/derailed/k9s/releases/latest/download/k9s_linux_amd64.deb && \
+  apt install ./k9s_linux_amd64.deb && rm k9s_linux_amd64.deb
 
 USER user
 
@@ -93,7 +95,7 @@ RUN . "$HOME/.cargo/env" && \
   rm -f install.sh
 
 # Aliases
-RUN zoxide init zsh >> ~/.zshrc && \
+RUN echo "" && zoxide init zsh >> ~/.zshrc && \
 echo '\n \
 #plug romkatv/powerlevel10k
 export PATH=/home/user/.local/bin:$PATH \n\
