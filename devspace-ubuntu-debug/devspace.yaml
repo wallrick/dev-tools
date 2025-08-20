@@ -1,0 +1,33 @@
+version: v2beta1
+name: devspace-ubuntu-debug
+
+pipelines:
+  dev:
+    run: |-
+      ensure_pull_secrets --all  
+      build_images --all
+      create_deployments --all  
+      start_dev ubuntu
+
+images:
+  ubuntu:
+    image: my-image-registry.tld/ubuntu
+
+deployments:
+  ubuntu:
+    kubectl:
+      manifests:
+        - manifests/
+
+dev:
+  ubuntu:
+    imageSelector: my-image-registry.tld/ubuntu
+    reversePorts:
+    - port: "3128:3128"
+    env:
+      - name: http_proxy
+        value: http://localhost:3128
+      - name: https_proxy
+        value: http://localhost:3128
+    terminal: 
+      command: bash
